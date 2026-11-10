@@ -1,0 +1,40 @@
+name: Build Windows EXE
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          pip install streamlit catboost pandas pyinstaller platformdirs setuptools
+
+      - name: Build EXE with PyInstaller
+        run: |
+          pyinstaller --onefile --name TN_Crop_Advisor `
+            --add-data "streamlit_app.py;." `
+            --add-data "outputs;outputs" `
+            --add-data "nasa_power_tamilnadu;nasa_power_tamilnadu" `
+            --collect-all streamlit `
+            --collect-all catboost `
+            --collect-all platformdirs `
+            --hidden-import platformdirs `
+            launcher.py
+
+      - name: Upload EXE as build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: TN_Crop_Advisor-windows-exe
+          path: dist/TN_Crop_Advisor.exe
