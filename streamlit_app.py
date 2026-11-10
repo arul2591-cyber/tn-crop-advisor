@@ -16,13 +16,36 @@ Requires, in the same folder as this script:
     - nasa_power_tamilnadu/tamilnadu_climate_monthly_agg_2015_2024.csv
 """
 
+import os
+import sys
 import streamlit as st
 import pandas as pd
 from pathlib import Path
 from catboost import CatBoostClassifier
 
-MODEL_PATH = Path("outputs/catboost_crop_model.cbm")
-CLIMATE_MONTHLY_PATH = Path("nasa_power_tamilnadu/tamilnadu_climate_monthly_agg_2015_2024.csv")
+
+def resource_path(relative_path: str) -> Path:
+    """
+    Resolve a data file path that works both when this script is run
+    directly (python streamlit_app.py / streamlit run streamlit_app.py)
+    and when it has been bundled into a PyInstaller .exe.
+
+    PyInstaller's --onefile mode unpacks bundled data files into a
+    temporary folder at runtime (sys._MEIPASS) rather than leaving them
+    next to the .exe the user double-clicked, so a plain relative path
+    like Path("outputs/catboost_crop_model.cbm") resolves against the
+    wrong directory once frozen and the file "disappears" even though it
+    really is bundled inside the .exe.
+    """
+    if hasattr(sys, "_MEIPASS"):
+        base_path = Path(sys._MEIPASS)
+    else:
+        base_path = Path(os.path.dirname(os.path.abspath(__file__)))
+    return base_path / relative_path
+
+
+MODEL_PATH = resource_path("outputs/catboost_crop_model.cbm")
+CLIMATE_MONTHLY_PATH = resource_path("nasa_power_tamilnadu/tamilnadu_climate_monthly_agg_2015_2024.csv")
 
 FEATURE_COLS = ["N", "P", "K", "temperature", "humidity", "ph", "rainfall"]
 
